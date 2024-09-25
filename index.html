@@ -1,229 +1,230 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>高性能产品图片展示 (东华产品)</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      background-color: #f0f0f0;
-    }
-    。container {
-      width: 1400px;
-      display: flex;
-      position: relative;
-    }
-    .main-content {
-      flex-grow: 1;
-      padding: 20px;
-      height: 100vh;
-      overflow-y: auto;
-      position: relative;
-    }
-    .product-container {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 20px;
-    }
-    .product {
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      padding: 10px;
-      text-align: center;
-      background-color: white;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      transition: transform 0.3s ease;
-    }
-    .product:hover {
-      transform: translateY(-5px);
-    }
-    。product img {
-      width: 100%;
-      height: 150px;
-      object-fit: cover;
-      border-radius: 5px;
-    }
-    .product h3 {
-      margin: 10px 0;
-      font-size: 14px;
-    }
-    .product p {
-      color: #e4393c;
-      font-weight: bold;
-    }
-    .sidebar {
-      width: 200px;
-      background-color: #f1f1f1;
-      padding: 20px;
-      height: 100vh;
-      overflow-y: auto;
-      position: fixed;
-      left: -240px;
-      top: 0;
-      transition: left 0.3s ease;
-      z-index: 1000;
-      box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-    }
-    .sidebar.active {
-      left: 0;
-    }
-    .sidebar h2 {
-      margin-top: 0;
-    }
-    .sidebar ul {
-      list-style-type: none;
-      padding: 0;
-    }
-    .sidebar li {
-      margin-bottom: 10px;
-      transition: all 0.2s ease;
-      cursor: pointer;
-      padding: 5px 10px;
-      border-radius: 5px;
-    }
-    .sidebar li:hover {
-      background-color: #e4393c;
-      color: white;
-    }
-    .sidebar li.active {
-      background-color: #e4393c;
-      color: white;
-      font-weight: bold;
-    }
-    .float-button {
-      position: fixed;
-      bottom: 30px;
-      right: 30px;
-      width: 70px;
-      height: 70px;
-      background-color: #e4393c;
-      color: white;
-      border: none;
-      border-radius: 50%;
-      font-size: 32px;
-      cursor: pointer;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      z-index: 1001;
-      transition: background-color 0.3s ease, transform 0.3s ease;
-    }
-    .float-button:hover {
-      background-color: #c13030;
-      transform: scale(1.1);
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自定义导航页面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        .card h3 {
+            margin-top: 0;
+            color: #444;
+        }
+        .links {
+            list-style-type: none;
+            padding: 0;
+        }
+        .links li {
+            margin-bottom: 8px;
+        }
+        .links a {
+            color: #0066cc;
+            text-decoration: none;
+        }
+        .links a:hover {
+            text-decoration: underline;
+        }
+        .add-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .add-btn:hover {
+            background-color: #45a049;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 300px;
+            border-radius: 5px;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        input[type="text"], input[type="url"] {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0 15px;
+            display: inline-block;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <div class="sidebar" id="sidebar">
-      <h2>目录</h2>
-      <ul id="category-list"></ul>
+    <h1>自定义导航页面</h1>
+    <div class="grid" id="navigation-grid">
+        <!-- 导航卡片将在这里动态生成 -->
     </div>
-    <div class="main-content" id="main-content">
-      <div class="product-container" id="product-container"></div>
+
+    <div id="addLinkModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>添加新链接</h2>
+            <form id="addLinkForm">
+                <label for="linkTitle">链接标题:</label>
+                <input type="text" id="linkTitle" name="linkTitle" required>
+                <label for="linkUrl">链接地址:</label>
+                <input type="url" id="linkUrl" name="linkUrl" required>
+                <input type="submit" value="添加">
+            </form>
+        </div>
     </div>
-  </div>
-  <button class="float-button" id="toggleButton">☰</button>
 
-  <script>
-    const sidebar = document.getElementById('sidebar');
-    const categoryList = document.getElementById('category-list');
-    const toggleButton = document.getElementById('toggleButton');
-    const mainContent = document.getElementById('main-content');
-    const productContainer = document.getElementById('product-container');
+    <script>
+        const navigationData = [
+            {
+                title: "搜索引擎",
+                links: [
+                    { name: "百度", url: "https://www.baidu.com" },
+                    { name: "谷歌", url: "https://www.google.com" },
+                    { name: "必应", url: "https://www.bing.com" }
+                ]
+            },
+            {
+                title: "社交媒体",
+                links: [
+                    { name: "微博", url: "https://weibo.com" },
+                    { name: "知乎", url: "https://www.zhihu.com" },
+                    { name: "豆瓣", url: "https://www.douban.com" }
+                ]
+            },
+            {
+                title: "新闻",
+                links: [
+                    { name: "新浪新闻", url: "https://news.sina.com.cn" },
+                    { name: "腾讯新闻", url: "https://news.qq.com" },
+                    { name: "网易新闻", url: "https://news.163.com" }
+                ]
+            }
+        ];
 
-    const TOTAL_PRODUCTS = 3; // 根据实际产品数量调整
-    const TOTAL_CATEGORIES = 1; // 只有一个类别 "东华"
-    const PRODUCTS_PER_CATEGORY = TOTAL_PRODUCTS;
-    const PRODUCTS_PER_ROW = 7;
-    const PRODUCT_HEIGHT = 250; // 预估每个产品的高度
+        function createNavigationCard(category) {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <h3>${category.title}</h3>
+                <ul class="links">
+                    ${category.links.map(link => `<li><a href="${link.url}" target="_blank">${link.name}</a></li>`).join('')}
+                </ul>
+                <button class="add-btn" onclick="openModal('${category.title}')">+</button>
+            `;
+            return card;
+        }
 
-    // 阿里云OSS图片URL前缀
-    const OSS_URL_PREFIX = 'https://productlist-1.oss-cn-shenzhen.aliyuncs.com/%E4%B8%9C%E5%8D%8E/';
+        function renderNavigationGrid() {
+            const grid = document.getElementById('navigation-grid');
+            navigationData.forEach(category => {
+                grid.appendChild(createNavigationCard(category));
+            });
+        }
 
-    // 生成目录
-    const li = document.createElement('li');
-    li.textContent = '东华';
-    li.dataset.category = 1;
-    categoryList.appendChild(li);
+        renderNavigationGrid();
 
-    const categories = categoryList.querySelectorAll('li');
+        // 模态框相关功能
+        const modal = document.getElementById("addLinkModal");
+        const span = document.getElementsByClassName("close")[0];
+        let currentCategory = '';
 
-    // 虚拟滚动相关变量
-    let startIndex = 0;
-    let endIndex = 0;
-    const visibleRows = Math.ceil(window.innerHeight / PRODUCT_HEIGHT) + 1;
-    const visibleProducts = visibleRows * PRODUCTS_PER_ROW;
+        function openModal(category) {
+            modal.style.display = "block";
+            currentCategory = category;
+        }
 
-    // 创建产品元素
-    function createProductElement(index) {
-      const product = document.createElement('div');
-      product.className = 'product';
-      product.dataset.category = 1;
-      product.innerHTML = `
-        <img src="${OSS_URL_PREFIX}${index + 1}.jpg" alt="东华产品 ${index + 1}" loading="lazy">
-        <h3>东华产品 ${index + 1}</h3>
-        <p>¥${(Math.random() * 1000).toFixed(2)}</p>
-      `;
-      return product;
-    }
+        span.onclick = function() {
+            modal.style.display = "none";
+        }
 
-    // 更新可见产品
-    function updateVisibleProducts() {
-      const scrollTop = mainContent.scrollTop;
-      startIndex = Math.floor(scrollTop / PRODUCT_HEIGHT) * PRODUCTS_PER_ROW;
-      endIndex = Math.min(startIndex + visibleProducts, TOTAL_PRODUCTS);
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
 
-      productContainer.innerHTML = '';
-      productContainer.style.paddingTop = `${startIndex / PRODUCTS_PER_ROW * PRODUCT_HEIGHT}px`;
-      productContainer.style.paddingBottom = `${(TOTAL_PRODUCTS - endIndex) / PRODUCTS_PER_ROW * PRODUCT_HEIGHT}px`;
+        document.getElementById('addLinkForm').onsubmit = function(e) {
+            e.preventDefault();
+            const title = document.getElementById('linkTitle').value;
+            const url = document.getElementById('linkUrl').value;
+            addNewLink(currentCategory, title, url);
+            modal.style.display = "none";
+            this.reset();
+        }
 
-      for (let i = startIndex; i < endIndex; i++) {
-        productContainer.appendChild(createProductElement(i));
-      }
-
-      updateActiveCategory();
-    }
-
-    // 更新活动类别
-    function updateActiveCategory() {
-      categories[0].classList.add('active');
-    }
-
-    // 初始化
-    updateVisibleProducts();
-
-    // 事件监听
-    mainContent.addEventListener('scroll', updateVisibleProducts);
-
-    // 优化目录交互
-    categories[0].addEventListener('click', () => {
-      mainContent.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
-    });
-
-    toggleButton.addEventListener('click', () => {
-      sidebar.classList.toggle('active');
-    });
-
-    // 窗口大小变化时重新计算
-    window.addEventListener('resize', () => {
-      const newVisibleRows = Math.ceil(window.innerHeight / PRODUCT_HEIGHT) + 1;
-      if (newVisibleRows !== visibleRows) {
-        visibleRows = newVisibleRows;
-        visibleProducts = visibleRows * PRODUCTS_PER_ROW;
-        updateVisibleProducts();
-      }
-    });
-  </script>
+        function addNewLink(category, title, url) {
+            const categoryIndex = navigationData.findIndex(c => c.title === category);
+            if (categoryIndex !== -1) {
+                navigationData[categoryIndex].links.push({ name: title, url: url });
+                document.getElementById('navigation-grid').innerHTML = '';
+                renderNavigationGrid();
+            }
+        }
+    </script>
 </body>
 </html>

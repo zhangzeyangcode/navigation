@@ -10,59 +10,65 @@
             margin: 0;
             padding: 20px;
             background-color: #f0f0f0;
+            font-size: 14px;
         }
         h1 {
             text-align: center;
             color: #333;
+            font-size: 24px;
         }
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
         }
         .card {
             background-color: white;
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 6px;
+            padding: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             position: relative;
         }
         .card h3 {
             margin-top: 0;
             color: #444;
+            font-size: 16px;
         }
         .links {
             list-style-type: none;
             padding: 0;
+            margin: 0;
         }
         .links li {
-            margin-bottom: 8px;
+            margin-bottom: 5px;
         }
         .links a {
             color: #0066cc;
             text-decoration: none;
+            font-size: 12px;
         }
         .links a:hover {
             text-decoration: underline;
         }
         .add-btn {
             position: absolute;
-            top: 10px;
-            right: 10px;
+            top: 5px;
+            right: 5px;
             background-color: #4CAF50;
             color: white;
             border: none;
             border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            font-size: 20px;
+            width: 20px;
+            height: 20px;
+            font-size: 14px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
+            opacity: 0.6;
         }
         .add-btn:hover {
-            background-color: #45a049;
+            opacity: 1;
         }
         .modal {
             display: none;
@@ -96,7 +102,7 @@
             text-decoration: none;
             cursor: pointer;
         }
-        input[type="text"], input[type="url"] {
+        input[type="text"], input[type="url"], input[type="number"] {
             width: 100%;
             padding: 8px;
             margin: 5px 0 15px;
@@ -116,12 +122,76 @@
         input[type="submit"]:hover {
             background-color: #45a049;
         }
+        #add-category-btn {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #table-of-contents {
+            position: fixed;
+            right: 10px;
+            top: 50px;
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            max-width: 200px;
+        }
+        #table-of-contents h3 {
+            margin-top: 0;
+            font-size: 16px;
+        }
+        #table-of-contents ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        #table-of-contents li {
+            margin-bottom: 5px;
+        }
+        #table-of-contents a {
+            color: #0066cc;
+            text-decoration: none;
+            font-size: 12px;
+        }
+        #table-of-contents a:hover {
+            text-decoration: underline;
+        }
+        #add-toc-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
     <h1>自定义导航页面</h1>
     <div class="grid" id="navigation-grid">
         <!-- 导航卡片将在这里动态生成 -->
+    </div>
+
+    <button id="add-category-btn" onclick="openCategoryModal()">+</button>
+
+    <div id="table-of-contents">
+        <h3>目录</h3>
+        <ul id="toc-list"></ul>
+        <button id="add-toc-btn" onclick="openTocModal()">添加目录项</button>
     </div>
 
     <div id="addLinkModal" class="modal">
@@ -138,32 +208,53 @@
         </div>
     </div>
 
+    <div id="addCategoryModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>添加新类别</h2>
+            <form id="addCategoryForm">
+                <label for="categoryTitle">类别名称:</label>
+                <input type="text" id="categoryTitle" name="categoryTitle" required>
+                <input type="submit" value="添加">
+            </form>
+        </div>
+    </div>
+
+    <div id="addTocModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>添加目录项</h2>
+            <form id="addTocForm">
+                <label for="tocTitle">目录项标题:</label>
+                <input type="text" id="tocTitle" name="tocTitle" required>
+                <label for="tocPosition">页面位置 (像素):</label>
+                <input type="number" id="tocPosition" name="tocPosition" required>
+                <input type="submit" value="添加">
+            </form>
+        </div>
+    </div>
+
     <script>
-        const navigationData = [
+        let navigationData = [
             {
-                title: "搜索引擎",
+                title: "搜索",
                 links: [
                     { name: "百度", url: "https://www.baidu.com" },
-                    { name: "谷歌", url: "https://www.google.com" },
-                    { name: "必应", url: "https://www.bing.com" }
+                    { name: "谷歌", url: "https://www.google.com" }
                 ]
             },
             {
-                title: "社交媒体",
+                title: "社交",
                 links: [
                     { name: "微博", url: "https://weibo.com" },
-                    { name: "知乎", url: "https://www.zhihu.com" },
-                    { name: "豆瓣", url: "https://www.douban.com" }
-                ]
-            },
-            {
-                title: "新闻",
-                links: [
-                    { name: "新浪新闻", url: "https://news.sina.com.cn" },
-                    { name: "腾讯新闻", url: "https://news.qq.com" },
-                    { name: "网易新闻", url: "https://news.163.com" }
+                    { name: "知乎", url: "https://www.zhihu.com" }
                 ]
             }
+        ];
+
+        let tocData = [
+            { title: "顶部", position: 0 },
+            { title: "中间", position: 500 }
         ];
 
         function createNavigationCard(category) {
@@ -181,30 +272,65 @@
 
         function renderNavigationGrid() {
             const grid = document.getElementById('navigation-grid');
+            grid.innerHTML = '';
             navigationData.forEach(category => {
                 grid.appendChild(createNavigationCard(category));
             });
         }
 
+        function renderTableOfContents() {
+            const tocList = document.getElementById('toc-list');
+            tocList.innerHTML = '';
+            tocData.forEach(item => {
+                const li = document.createElement('li');
+                li.innerHTML = `<a href="#" onclick="scrollToPosition(${item.position})">${item.title}</a>`;
+                tocList.appendChild(li);
+            });
+        }
+
+        function scrollToPosition(position) {
+            window.scrollTo({
+                top: position,
+                behavior: 'smooth'
+            });
+        }
+
         renderNavigationGrid();
+        renderTableOfContents();
 
         // 模态框相关功能
-        const modal = document.getElementById("addLinkModal");
-        const span = document.getElementsByClassName("close")[0];
+        const linkModal = document.getElementById("addLinkModal");
+        const categoryModal = document.getElementById("addCategoryModal");
+        const tocModal = document.getElementById("addTocModal");
+        const closeButtons = document.getElementsByClassName("close");
         let currentCategory = '';
 
         function openModal(category) {
-            modal.style.display = "block";
+            linkModal.style.display = "block";
             currentCategory = category;
         }
 
-        span.onclick = function() {
-            modal.style.display = "none";
+        function openCategoryModal() {
+            categoryModal.style.display = "block";
+        }
+
+        function openTocModal() {
+            tocModal.style.display = "block";
+        }
+
+        for (let closeButton of closeButtons) {
+            closeButton.onclick = function() {
+                linkModal.style.display = "none";
+                categoryModal.style.display = "none";
+                tocModal.style.display = "none";
+            }
         }
 
         window.onclick = function(event) {
-            if (event.target == modal) {
-                modal.style.display = "none";
+            if (event.target == linkModal || event.target == categoryModal || event.target == tocModal) {
+                linkModal.style.display = "none";
+                categoryModal.style.display = "none";
+                tocModal.style.display = "none";
             }
         }
 
@@ -213,7 +339,24 @@
             const title = document.getElementById('linkTitle').value;
             const url = document.getElementById('linkUrl').value;
             addNewLink(currentCategory, title, url);
-            modal.style.display = "none";
+            linkModal.style.display = "none";
+            this.reset();
+        }
+
+        document.getElementById('addCategoryForm').onsubmit = function(e) {
+            e.preventDefault();
+            const title = document.getElementById('categoryTitle').value;
+            addNewCategory(title);
+            categoryModal.style.display = "none";
+            this.reset();
+        }
+
+        document.getElementById('addTocForm').onsubmit = function(e) {
+            e.preventDefault();
+            const title = document.getElementById('tocTitle').value;
+            const position = parseInt(document.getElementById('tocPosition').value);
+            addNewTocItem(title, position);
+            tocModal.style.display = "none";
             this.reset();
         }
 
@@ -221,9 +364,18 @@
             const categoryIndex = navigationData.findIndex(c => c.title === category);
             if (categoryIndex !== -1) {
                 navigationData[categoryIndex].links.push({ name: title, url: url });
-                document.getElementById('navigation-grid').innerHTML = '';
                 renderNavigationGrid();
             }
+        }
+
+        function addNewCategory(title) {
+            navigationData.push({ title: title, links: [] });
+            renderNavigationGrid();
+        }
+
+        function addNewTocItem(title, position) {
+            tocData.push({ title: title, position: position });
+            renderTableOfContents();
         }
     </script>
 </body>

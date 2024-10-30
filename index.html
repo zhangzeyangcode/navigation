@@ -1,382 +1,1780 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>自定义导航页面</title>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+
+
+    <title>1688 产品展示 - Tabs导航</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        body,
+        html {
             margin: 0;
-            padding: 20px;
-            background-color: #f0f0f0;
-            font-size: 14px;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            height: 100%;
+            overflow: hidden;
+            /* 防止出现滚动条 */
         }
-        h1 {
-            text-align: center;
-            color: #333;
+
+        .page {
+            display: flex;
+            height: 100vh;
+            /* 使用视口高度 */
+            overflow: hidden;
+            /* 防止整个页面出现滚动条 */
+        }
+
+        .tabs {
+            width: 200px;
+            min-width: 200px;
+            /* 设置最小宽度 */
+            background-color: #ffffff;
+            border-right: 1px solid #e7e7e7;
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+            /* 防止水平滚动 */
+        }
+
+        .logo {
             font-size: 24px;
+            font-weight: bold;
+            color: #ff6a00;
+            text-align: center;
+            padding: 20px 0;
         }
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 15px;
-        }
-        .card {
-            background-color: white;
-            border-radius: 6px;
-            padding: 10px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            position: relative;
-        }
-        .card h3 {
-            margin-top: 0;
-            color: #444;
-            font-size: 16px;
-        }
-        .links {
+
+        .tab-list {
             list-style-type: none;
             padding: 0;
             margin: 0;
         }
-        .links li {
-            margin-bottom: 5px;
+
+        .tab-item {
+            border-bottom: 1px solid #e7e7e700;
+            position: relative;
+            padding: 5px 0px 5px 0px;
+
+            /* 为绝对定位的子元素提供参考 */
         }
-        .links a {
-            color: #0066cc;
-            text-decoration: none;
-            font-size: 12px;
-        }
-        .links a:hover {
-            text-decoration: underline;
-        }
-        .add-btn {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            font-size: 14px;
-            cursor: pointer;
+
+        .tab-item>a {
             display: flex;
             align-items: center;
+            padding: 7px 15px 7px 10px;
+            text-decoration: none;
+            color: #000000;
+            font-weight: 500;
+            transition: background-color 0.1s;
+
+        }
+
+        .tab-item>a:hover,
+        .tab-item>a.active {
+            background-color: #e8e8e8;
+        }
+
+        .tab-icon {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+
+        .sub-menu {
+            display: block;
+            /* 改为始终显示 */
+            list-style-type: none;
+            padding-left: 0px;
+            margin: 0;
+            background-color: #ffffff;
+        }
+
+        .sub-menu.active {
+            display: block;
+        }
+
+        .sub-menu li a {
+            display: block;
+            padding: 5px 15px 6px 45px;
+            font-size: 14px;
+            text-decoration: none;
+            color: #717171;
+        }
+
+        .sub-menu li a:hover,
+        .sub-menu li a.active {
+            background-color: #e0e0e0;
+        }
+
+
+        .container {
+            flex-grow: 1;
+            height: 100vh;
+            /* 使用视口高度 */
+            overflow-y: auto;
+            /* 允许垂直滚动 */
+            display: flex;
             justify-content: center;
-            opacity: 0.6;
+            align-items: flex-start;
+            padding: 20px;
+            background-color: rgb(247, 247, 247);
         }
-        .add-btn:hover {
-            opacity: 1;
+
+        .product-area {
+            width: 100%;
+            max-width: 1700px;
+            /* 设置最大宽度 */
+            padding: 20px;
+            box-sizing: border-box;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 0 13px rgba(0, 0, 0, 0.1);
+
         }
+
+        /* 移动端样式 */
+        @media (max-width: 1000px) {
+            .product-area {
+                background-color: transparent;
+                box-shadow: none;
+                padding: 0;
+                margin: 0;
+            }
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        /* 产品卡片样式 */
+        .product-card {
+            border: 1px solid #ddd;
+            border-radius: 7px;
+            padding: 0px;
+            text-align: center;
+            background-color: #ffffff;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            position: relative;
+        }
+
+        /* 产品卡片悬停效果 */
+        .product-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .product-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 7px;
+        }
+
+        .product-card h3 {
+            font-size: 13px;
+        }
+
+        /* 移动端样式 */
+        @media (max-width: 768px) {
+            .product-grid {
+                grid-template-columns: repeat(3, 1fr);
+                /* 设置为两列 */
+                gap: 10px;
+                /* 减小间距 */
+            }
+
+            .product-card img {
+                max-width: 100%;
+                height: auto;
+            }
+
+            .product-card h3 {
+                font-size: 9px;
+            }
+        }
+
+        /* 更小屏幕的样式 */
+        @media (max-width: 100px) {
+            .product-grid {
+                grid-template-columns: 1fr;
+                /* 非常小的屏幕使用单列 */
+            }
+        }
+
+        .DynamicValue {
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            background: #007bff;
+            /* 浅灰色背景 */
+            border-radius: 10px;
+            /* 圆角设计 */
+            color: #fff;
+            /* 黑色文本 */
+            font-size: 12px;
+            height: 20px;
+            line-height: 20px;
+            min-width: 20px;
+            padding: 0 6px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            /* 添加轻微阴影 */
+        }
+
+        /* 为有子菜单的项目调整指示器位置 */
+        .tab-item:has(.sub-menu) .DynamicValue {
+            top: 15px;
+            transform: none;
+        }
+
+        .heart-icon {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            width: 37px;
+            height: 37px;
+            z-index: 10;
+            font-size: 24px;
+            color: #ffffff;
+            transition: color 0.1s ease;
+        }
+
+        .heart-icon svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .heart-icon:hover {
+            color: #ff6a00;
+        }
+
+        .heart-icon.selected {
+            color: #ff0000;
+        }
+
         .modal {
             display: none;
             position: fixed;
-            z-index: 1;
+            z-index: 1001;
             left: 0;
             top: 0;
             width: 100%;
             height: 100%;
             overflow: auto;
-            background-color: rgba(0,0,0,0.4);
+            background-color: rgba(0, 0, 0, 0.4);
         }
+
         .modal-content {
             background-color: #fefefe;
-            margin: 15% auto;
-            padding: 20px;
+            margin: 5% auto;
+            padding: 5px 15px 5px 15px;
             border: 1px solid #888;
-            width: 300px;
+            width: 70%;
             border-radius: 5px;
+            max-height: none;
+            overflow: visible;
         }
+
+        /* 移动端样式 */
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 90%;
+
+            }
+        }
+
         .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
+            position: absolute;
+            right: -32px;
+            top: -32px;
+            width: 32px;
+            height: 32px;
+            background-color: #d10000;
+            color: white;
+            border-radius: 50%;
+            font-size: 31px;
+            /* 稍微减小字体大小 */
+            line-height: 32px;
+            /* 使行高与高度相同 */
+            text-align: center;
             cursor: pointer;
+            user-select: none;
+            /* 防止文本被选中 */
+            display: flex;
+            /* 使用 flex 布局 */
+            align-items: center;
+            /* 垂直居中 */
+            justify-content: center;
+            /* 水平居中 */
+            padding: 0;
+            /* 移除任何内边距 */
+            border: none;
+            /* 移除边框 */
+            border: 2px solid white;
+            /* 添加白色边框 */
         }
-        .close:hover,
-        .close:focus {
-            color: black;
-            text-decoration: none;
+
+
+        .close:hover {
+            background-color: #e65c00;
+        }
+
+
+
+
+
+
+
+        .remove-product svg {
+            width: 6px;
+            height: 6px;
+            position: absolute;
+            top: -5px;
+            right: -5px;
             cursor: pointer;
+            z-index: 11;
         }
-        input[type="text"], input[type="url"], input[type="number"] {
-            width: 100%;
-            padding: 8px;
-            margin: 5px 0 15px;
-            display: inline-block;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+
+        .remove-icon {
+            background-color: #3e3e3e;
+            border-radius: 50%;
+            padding: 4px;
+            box-sizing: content-box;
+            border: 1px solid white;
+            transition: background-color 0s ease;
+        }
+
+        .remove-icon:hover {
+            background-color: #e65c00;
+        }
+
+
+        .download-button {
+            display: block;
+            width: 200px;
+            margin: 0 auto;
+            padding: 8px 15px;
+            /* 使用后面的值 */
+            background-color: #ff6a00;
+            color: white;
+            text-align: center;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            /* 新增的属性 */
+        }
+
+        /* 移动端样式 */
+        @media (max-width: 768px) {
+            .download-button {
+                width: 120px;
+            }
+        }
+
+        .modal-product-card {
+            position: relative;
+            width: calc(16.666% - 10px);
+            margin-right: 10px;
+            margin-bottom: 20px;
+            padding: 0px;
+            border: 1px solid #ddd;
+            border-radius: 7px;
             box-sizing: border-box;
         }
-        input[type="submit"] {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 15px;
-            border: none;
+
+        .modal-product-card:nth-child(6n) {
+            margin-right: 0;
+        }
+
+        .modal-product-card .heart-icon {
+            display: none;
+        }
+
+
+
+        @media (max-width: 1400px) {
+            .modal-product-card {
+                width: calc(20% - 10px);
+            }
+
+            .modal-product-card:nth-child(6n) {
+                margin-right: 10px;
+            }
+
+            .modal-product-card:nth-child(5n) {
+                margin-right: 0;
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .modal-product-card {
+                width: calc(25% - 10px);
+            }
+
+            .modal-product-card:nth-child(5n) {
+                margin-right: 10px;
+            }
+
+            .modal-product-card:nth-child(4n) {
+                margin-right: 0;
+            }
+        }
+
+
+
+
+
+
+
+        @media (max-width: 768px) {
+            .page {
+                position: relative;
+                overflow-x: hidden;
+            }
+
+            .tabs {
+                position: fixed;
+                left: -200px;
+                top: 0;
+                bottom: 0;
+                transition: left 0.1s ease;
+                z-index: 1000;
+            }
+
+            .container {
+                margin-left: 0;
+            }
+
+            .menu-toggle {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                background-color: #ff6a00;
+                color: white;
+                border: none;
+                font-size: 24px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                z-index: 1001;
+            }
+
+            .menu-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 999;
+                display: none;
+            }
+
+            .menu-open .tabs {
+                left: 0;
+            }
+
+            .menu-open .menu-overlay {
+                display: block;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .menu-toggle {
+                display: flex;
+                /* 确保按钮显示 */
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                width: 65px;
+                height: 65px;
+                border-radius: 50%;
+                background-color: #ff6a00;
+                color: white;
+                border: none;
+                font-size: 30px;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                z-index: 1001;
+            }
+
+            .page {
+                position: relative;
+                overflow-x: hidden;
+            }
+
+            .tabs {
+                position: fixed;
+                left: -200px;
+                /* 初始状态隐藏 */
+                top: 0;
+                bottom: 0;
+                width: 200px;
+                transition: left 0.1s ease;
+                z-index: 1000;
+                background-color: #ffffff;
+                /* 确保背景色 */
+            }
+
+            .container {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            .menu-open .tabs {
+                left: 0;
+                /* 菜单打开时显示 */
+            }
+
+            .menu-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 999;
+            }
+
+            .menu-open .menu-overlay {
+                display: block;
+            }
+        }
+
+        @media screen and (min-width: 769px) {
+            .menu-toggle {
+                display: none !important;
+            }
+        }
+
+        @media screen and (max-width: 768px) {
+            .menu-toggle {
+                display: flex !important;
+            }
+        }
+
+        .modal-product-card .quantity-input {
+            margin-top: 10px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .modal-product-card .quantity-input label {
+            display: inline-block;
+            margin-right: 0px;
+        }
+
+        .modal-product-card .quantity-input input {
+            width: 100px;
+            padding: 5px;
+            border: 1px solid #ccc;
             border-radius: 4px;
-            cursor: pointer;
         }
-        input[type="submit"]:hover {
-            background-color: #45a049;
+
+        @media screen and (max-width: 1000px) {
+            .modal-product-card .quantity-input label {
+                display: inline-block;
+                margin-right: 0px;
+                font-size: 12px;
+            }
+
+            .modal-product-card .quantity-input input {
+                width: 70px;
+                padding: 5px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+            }
         }
-        #add-category-btn {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            background-color: #4CAF50;
+
+
+
+        .download-button {
+            padding: 8px 15px;
+            background-color: #ff6a00;
             color: white;
             border: none;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            font-size: 20px;
             cursor: pointer;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .download-button:hover {
+            background-color: #3aa443;
+        }
+
+
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        #selected-count {
+            position: fixed;
+            width: 230px;
+            height: 40px;
+            top: 40px;
+            right: 40px;
+            /* 使用 flexbox 来实现水平和垂直居中 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            box-shadow: 0 2px 6px #0000001a;
+            color: white;
+            padding: 7px 12px;
+            font-size: 16px;
+            font-weight: 700;
+            border-radius: 50px;
+            z-index: 1000;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            animation: shake 20s ease-in-out 20s infinite;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            10%,
+            30%,
+            50%,
+            70%,
+            90% {
+                transform: translateX(-3px);
+            }
+
+            20%,
+            40%,
+            60%,
+            80% {
+                transform: translateX(3px);
+            }
+        }
+
+
+        #selected-count:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+
+
+
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .download-button {
+            width: 400px;
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-        #table-of-contents {
-            position: fixed;
-            right: 10px;
-            top: 50px;
-            background-color: white;
-            padding: 10px;
-            border-radius: 5px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            max-width: 200px;
-        }
-        #table-of-contents h3 {
-            margin-top: 0;
-            font-size: 16px;
-        }
-        #table-of-contents ul {
-            list-style-type: none;
-            padding: 0;
-            margin: 0;
-        }
-        #table-of-contents li {
-            margin-bottom: 5px;
-        }
-        #table-of-contents a {
-            color: #0066cc;
-            text-decoration: none;
-            font-size: 12px;
-        }
-        #table-of-contents a:hover {
-            text-decoration: underline;
-        }
-        #add-toc-btn {
-            background-color: #4CAF50;
-            color: white;
+            padding: 15px 15px;
             border: none;
-            border-radius: 4px;
-            padding: 5px 10px;
-            font-size: 12px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: bold;
+            color: white;
             cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .download-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .download-button .material-icons {
+            margin-right: 6px;
+            font-size: 18px;
+        }
+
+        #downloadReport {
+            background: linear-gradient(45deg, #FFC107, #FF5722);
+        }
+
+        #downloadExcel {
+            background: linear-gradient(45deg, #4CAF50, #8BC34A);
+        }
+
+        #shareImages {
+            background: linear-gradient(45deg, #00BCD4, #3F51B5);
+        }
+
+        #shareExcel {
+            background: linear-gradient(45deg, #9C27B0, #E91E63);
+        }
+
+        #shareImages,
+        #shareExcel {
+
+            display: none
+        }
+
+        .modal-header {
+            justify-content: space-between;
+            align-items: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0px 0px 25px 0px;
+            border-bottom: 1px solid #e0e0e0;
+            position: relative;
+        }
+
+
+        .modal-subtitle {
+            text-align: center;
+            color: #ffffff;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .modal-product-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+            max-height: none;
+            margin-bottom: 20px;
+        }
+
+
+        .download-content {
+            max-width: 100%;
+            margin: 20px 45px 30px 45px;
+            background-color: #ffffff;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid #ccc;
+        }
+
+        .report-header {
+            padding: 9px 40px;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-product-grid {
+            padding: 20px 20px 0px 20px;
+        }
+
+        .logo-title {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .company-logo {
+            width: 80px;
+            height: auto;
+        }
+
+        .header-content {
+            text-align: right;
+        }
+
+        .modal-title {
+            font-size: 28px;
+            flex-grow: 1;
+
+            font-weight: 700;
+            margin: 0;
+            text-align: center;
+
+        }
+
+        .report-info {
+            font-size: 14px;
+            opacity: 0.9;
             margin-top: 10px;
+        }
+
+
+
+
+        .share-tip {
+            width: 400px;
+            display: flex;
+            align-items: center;
+            /* 改为 center，实现垂直居中 */
+            justify-content: center;
+            /* 添加此行，实现水平居中 */
+            padding: 10px 15px;
+            margin-top: 20px;
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 50px;
+            color: #495057;
+        }
+
+        .share-tip .material-icons {
+            color: #ffc107;
+            margin-right: 10px;
+            font-size: 20px;
+        }
+
+        .share-tip p {
+            margin: 0;
+            font-size: 13px;
+            line-height: 1.4;
+            text-align: center;
+            /* 添加此行，确保文本在其容器内居中 */
+
         }
     </style>
 </head>
+
 <body>
-    <h1>自定义导航页面</h1>
-    <div class="grid" id="navigation-grid">
-        <!-- 导航卡片将在这里动态生成 -->
-    </div>
+    <div id="menu-overlay" class="menu-overlay"></div>
+    <button id="menu-toggle" class="menu-toggle">
+        <span class="menu-icon">☰</span>
+    </button>
 
-    <button id="add-category-btn" onclick="openCategoryModal()">+</button>
 
-    <div id="table-of-contents">
-        <h3>目录</h3>
-        <ul id="toc-list"></ul>
-        <button id="add-toc-btn" onclick="openTocModal()">添加目录项</button>
-    </div>
+    <div class="page">
+        <div class="tabs">
+            <div class="logo">
+                <img src="https://qcc-static.qichacha.com/qcc/pc-web/prod-24.10.66/images/logo-03617c0b.png"
+                    alt="Honfa Tech Logo" style="width: 100px; height: auto;">
+            </div>
+            <ul class="tab-list">
+                <li class="tab-item">
+                    <a href="#home" class="active"><span class="tab-icon">🏠</span>首页</a>
+                    <span class="DynamicValue">0</span>
+                </li>
+                <li class="tab-item">
+                    <a href="#orders"><span class="tab-icon">📋</span>订单管理</a>
+                    <span class="DynamicValue">0</span>
+                    <ul class="sub-menu">
+                        <li><a href="#all-orders">全部订单</a></li>
+                        <li><a href="#unpaid-orders">待付款</a></li>
+                        <li><a href="#unshipped-orders">待发货</a></li>
+                        <li><a href="#unreceived-orders">待收货</a></li>
+                    </ul>
+                </li>
+                <li class="tab-item">
+                    <a href="#purchase"><span class="tab-icon">🛒</span>商品采购</a>
+                    <span class="DynamicValue">0</span>
+                    <ul class="sub-menu">
+                        <li><a href="#purchaseo">商品采购1</a></li>
+                        <li><a href="#purchaset">商品采购2</a></li>
+                        <li><a href="#purchasef">商品采购3</a></li>
+                        <li><a href="#purchases">商品采购4</a></li>
+                    </ul>
+                </li>
+                <li class="tab-item">
+                    <a href="#suppliers"><span class="tab-icon">🏭</span>供应商管理</a>
+                    <span class="DynamicValue">0</span>
+                    <ul class="sub-menu">
+                        <li><a href="#had-orders">已发货</a></li>
+                    </ul>
+                </li>
+                <li class="tab-item">
+                    <a href="#cross-border"><span class="tab-icon">🌐</span>跨境服务</a>
+                    <span class="DynamicValue">0</span>
+                </li>
+                <li class="tab-item">
+                    <a href="#distribution"><span class="tab-icon">📊</span>分销管理</a>
+                    <span class="DynamicValue">0</span>
+                </li>
+                <li class="tab-item">
+                    <a href="#my-ali"><span class="tab-icon">👤</span>我的阿里</a>
+                    <span class="DynamicValue">0</span>
+                </li>
+            </ul>
 
-    <div id="addLinkModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>添加新链接</h2>
-            <form id="addLinkForm">
-                <label for="linkTitle">链接标题:</label>
-                <input type="text" id="linkTitle" name="linkTitle" required>
-                <label for="linkUrl">链接地址:</label>
-                <input type="url" id="linkUrl" name="linkUrl" required>
-                <input type="submit" value="添加">
-            </form>
         </div>
+        <div class="container">
+            <div class="product-area">
+                <div id="home" class="tab-content active">
+                    <h1>首页</h1>
+                    <div class="product-grid">
+                        <div class="product-card" data-product-id="SKU1">
+                            <img src="https://cbu01.alicdn.com/img/ibank/9263039772_1919203010.jpg_460x460q100.jpg"
+                                alt="产品图片" data-product-id="SKU2">
+                            <h3>首页产品1</h3>
+                        </div>
+                        <div class="product-card" data-product-id="SKU3">
+                            <img src="https://cbu01.alicdn.com/img/ibank/9263039772_1919203010.jpg_460x460q100.jpg"
+                                alt="产品图片">
+                            <h3>首页产品2</h3>
+                        </div>
+                        <div class="product-card" data-product-id="SKU4">
+                            <img src="https://cbu01.alicdn.com/img/ibank/9263039772_1919203010.jpg_460x460q100.jpg"
+                                alt="产品图片">
+                            <h3>首页产品3</h3>
+                        </div>
+                        <div class="product-card" data-product-id="SKU5">
+                            <img src="https://cbu01.alicdn.com/img/ibank/9263039772_1919203010.jpg_460x460q100.jpg"
+                                alt="产品图片">
+                            <h3>首页产品4</h3>
+                        </div>
+                        <div class="product-card" data-product-id="SKU2">
+                            <img src="https://cbu01.alicdn.com/img/ibank/9263039772_1919203010.jpg_460x460q100.jpg"
+                                alt="产品图片">
+                            <h3>首页产品4</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="orders" class="tab-content">
+                    <h1>订单管理</h1>
+                    <div id="all-orders">
+                        <h2>全部订单</h2>
+                        <div class="product-grid">
+                            <div class="product-card" data-product-id="SKU6">
+                                <img src="https://cbu01.alicdn.com/img/ibank/9263039772_1919203010.jpg_460x460q100.jpg"
+                                    alt="产品图片">
+                                <h3>全部订单产品1</h3>
+                            </div>
+                            <div class="product-card" data-product-id="SKU7">
+                                <img src="https://cbu01.alicdn.com/img/ibank/9263039772_1919203010.jpg_460x460q100.jpg"
+                                    alt="产品图片">
+                                <h3>全部订单产品2</h3>
+                            </div>
+                            <div class="product-card" data-product-id="SKU8">
+                                <img src="https://cbu01.alicdn.com/img/ibank/9263039772_1919203010.jpg_460x460q100.jpg"
+                                    alt="产品图片">
+                                <h3>全部订单产品1</h3>
+                            </div>
+                            <div class="product-card" data-product-id="SKU9">
+                                <img src="https://cbu01.alicdn.com/img/ibank/9263039772_1919203010.jpg_460x460q100.jpg"
+                                    alt="产品图片">
+                                <h3>全部订单产品2</h3>
+                            </div>
+                            <div class="product-card" data-product-id="SKU10">
+                                <img src="https://cbu01.alicdn.com/img/ibank/9263039772_1919203010.jpg_460x460q100.jpg"
+                                    alt="产品图片">
+                                <h3>全部订单产品1</h3>
+                            </div>
+                            <div class="product-card" data-product-id="SKU11">
+                                <img src="https://cbu01.alicdn.com/img/ibank/9263039772_1919203010.jpg_460x460q100.jpg"
+                                    alt="产品图片">
+                                <h3>全部订单产品2</h3>
+                            </div>
+
+                        </div>
+                    </div>
+                    <div id="unpaid-orders">
+                        <h2>待付款</h2>
+                        <div class="product-grid">
+                            <div class="product-card" data-product-id="SKU12">
+                                <img src="https://cbu01.alicdn.com/img/ibank/9263039772_1919203010.jpg_460x460q100.jpg"
+                                    alt="产品图片">
+                                <h3>待付款产品1</h3>
+                            </div>
+                            <div class="product-card" data-product-id="SKUO13">
+                                <img src="https://cbu01.alicdn.com/img/ibank/9263039772_1919203010.jpg_460x460q100.jpg"
+                                    alt="产品图片">
+                                <h3>待付款产品1</h3>
+                            </div>
+                            <div class="product-card" data-product-id="SKUQ12">
+                                <img src="https://cbu01.alicdn.com/img/ibank/9263039772_1919203010.jpg_460x460q100.jpg"
+                                    alt="产品图片">
+                                <h3>待付款产品1</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="unshipped-orders">
+                        <h2>待发货</h2>
+                        <div class="product-grid">
+                            <div class="product-card" data-product-id="SKU13">
+                                <img src="https://cbu01.alicdn.com/img/ibank/9263039772_1919203010.jpg_460x460q100.jpg"
+                                    alt="产品图片">
+                                <h3>待发货产品1</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="unreceived-orders">
+                        <h2>待收货</h2>
+                        <div class="product-grid">
+                            <div class="product-card" data-product-id="SKU14">
+                                <img src="https://cbu01.alicdn.com/img/ibank/9263039772_1919203010.jpg_460x460q100.jpg"
+                                    alt="产品图片">
+                                <h3>待收货产品1</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+
+                <div id="purchase" class="tab-content">
+                    <h1>商品采购</h1>
+                    <div id="purchaseo">
+                        <h2>商品采购1</h2>
+                        <div class="product-grid">
+                            <div class="product-card" data-product-id="SKU15">
+                                <img src="https://cbu01.alicdn.com/img/ibank/9263039772_1919203010.jpg_460x460q100.jpg"
+                                    alt="产品图片">
+                                <h3>商品采购产品1</h3>
+                            </div>
+                            <div class="product-card" data-product-id="SKU16">
+                                <img src="https://cbu01.alicdn.com/img/ibank/9263039772_1919203010.jpg_460x460q100.jpg"
+                                    alt="产品图片">
+                                <h3>商品采购产品2</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div id="suppliers" class="tab-content">
+                    <h1>供应商管理</h1>
+                    <div class="product-grid">
+                        <div class="product-card" data-product-id="SKU17">
+                            <img src="https://cbu01.alicdn.com/img/ibank/9263039772_1919203010.jpg_460x460q100.jpg"
+                                alt="产品图片">
+                            <h3>供应商产品1</h3>
+                        </div>
+                        <div class="product-card" data-product-id="SKU18">
+                            <img src="https://cbu01.alicdn.com/img/ibank/9263039772_1919203010.jpg_460x460q100.jpg"
+                                alt="产品图片">
+                            <h3>供应商产品2</h3>
+                        </div>
+                    </div>
+                </div>
+                <div id="cross-border" class="tab-content">
+                    <h1>跨境服务</h1>
+                    <div class="product-grid">
+                        <div class="product-card" data-product-id="SKU19">
+                            <img src="https://cbu01.alicdn.com/img/ibank/9263039772_1919203010.jpg_460x460q100.jpg"
+                                alt="产品图片">
+                            <h3>跨境产品1</h3>
+                        </div>
+                        <div class="product-card" data-product-id="SKU20">
+                            <img src="https://cbu01.alicdn.com/img/ibank/9263039772_1919203010.jpg_460x460q100.jpg"
+                                alt="产品图片">
+                            <h3>跨境产品2</h3>
+                        </div>
+                    </div>
+                </div>
+                <div id="distribution" class="tab-content">
+                    <h1>分销管理</h1>
+                    <div class="product-grid">
+                        <div class="product-card" data-product-id="SKU21">
+                            <img src="https://cbu01.alicdn.com/img/ibank/9263039772_1919203010.jpg_460x460q100.jpg"
+                                alt="产品图片">
+                            <h3>分销产品1</h3>
+                        </div>
+                        <div class="product-card" data-product-id="SKU22">
+                            <img src="https://cbu01.alicdn.com/img/ibank/9263039772_1919203010.jpg_460x460q100.jpg"
+                                alt="产品图片">
+                            <h3>分销产品2</h3>
+                        </div>
+                    </div>
+                </div>
+                <div id="my-ali" class="tab-content">
+                    <h1>我的阿里</h1>
+                    <div class="product-grid">
+                        <div class="product-card" data-product-id="SKU23">
+                            <img src="https://cbu01.alicdn.com/img/ibank/9263039772_1919203010.jpg_460x460q100.jpg"
+                                alt="产品图片">
+                            <h3>个人产品1</h3>
+                        </div>
+                        <div class="product-card" data-product-id="SKU24">
+                            <img src="https://cbu01.alicdn.com/img/ibank/9263039772_1919203010.jpg_460x460q100.jpg"
+                                alt="产品图片">
+                            <h3>个人产品2</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div id="selectedProductsModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span class="close">&times;</span>
+                    <div class="button-group">
+                        <button class="download-button" id="downloadReport"><span
+                                class="material-icons">image</span>下载已选中产品报表</button>
+                        <button class="download-button" id="downloadExcel"><span
+                                class="material-icons">table_chart</span>下载已选款Excel表格</button>
+
+
+                        <button class="download-button" id="shareImages"><span
+                                class="material-icons">share</span>分享已选款图片</button>
+                        <button class="download-button" id="shareExcel"><span
+                                class="material-icons">send</span>分享Excel表格</button>
+                    </div>
+                    <div class="share-tip">
+                        <span class="material-icons">lightbulb</span>
+                        <p>提示：文件下载完成后，可发送至供应商进行询价</p>
+                    </div>
+                </div>
+
+
+                <div class="download-content">
+                    <header class="report-header">
+                        <div class="logo-title">
+                            <img src="https://qcc-static.qichacha.com/qcc/pc-web/prod-24.10.66/images/logo-03617c0b.png"
+                                alt="公司Logo" class="company-logo">
+                            <h2 class="modal-title">已选中产品报表</h2>
+                        </div>
+                        <div class="header-content">
+                            <div class="report-info">
+                                <p>总计: <span id="totalProducts">0</span> 件产品</p>
+                                <p class="modal-subtitle" id="reportTimestamp"></p>
+                            </div>
+                        </div>
+                    </header>
+                    <div class="modal-product-grid">
+                        <div class="modal-product-list" id="selectedProductsList"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+
+
+
+        <div id="loadingIndicator"
+            style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 9999;">
+            <div
+                style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: white; padding: 20px; border-radius: 5px; text-align: center;">
+                <p id="loadingMessage">正在处理，请稍候...</p>
+                <div class="spinner"
+                    style="width: 50px; height: 50px; border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; margin: 10px auto;">
+                </div>
+            </div>
+        </div>
+
+
+
+
+
     </div>
 
-    <div id="addCategoryModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>添加新类别</h2>
-            <form id="addCategoryForm">
-                <label for="categoryTitle">类别名称:</label>
-                <input type="text" id="categoryTitle" name="categoryTitle" required>
-                <input type="submit" value="添加">
-            </form>
-        </div>
-    </div>
-
-    <div id="addTocModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>添加目录项</h2>
-            <form id="addTocForm">
-                <label for="tocTitle">目录项标题:</label>
-                <input type="text" id="tocTitle" name="tocTitle" required>
-                <label for="tocPosition">页面位置 (像素):</label>
-                <input type="number" id="tocPosition" name="tocPosition" required>
-                <input type="submit" value="添加">
-            </form>
-        </div>
-    </div>
 
     <script>
-        let navigationData = [
-            {
-                title: "搜索",
-                links: [
-                    { name: "百度", url: "https://www.baidu.com" },
-                    { name: "谷歌", url: "https://www.google.com" }
-                ]
-            },
-            {
-                title: "社交",
-                links: [
-                    { name: "微博", url: "https://weibo.com" },
-                    { name: "知乎", url: "https://www.zhihu.com" }
-                ]
+        const heartSvg = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 34 34" width="34" height="34">
+  <circle cx="17" cy="17" r="16" fill="rgba(62, 62, 62, 0.7)"/>
+  <path d="M17 28.7l-1.6-1.45C9.9 22.3 6 18.9 6 14.75 6 11.37 8.7 8.7 12.1 8.7c1.9 0 3.7 0.89 4.9 2.3 1.2-1.41 3-2.3 4.9-2.3 3.4 0 6.1 2.67 6.1 6.05 0 4.15-3.9 7.55-9.4 12.5L17 28.7z" fill="currentColor"/>
+</svg>`;
+
+        document.addEventListener('DOMContentLoaded', function () {
+
+            const tabItems = document.querySelectorAll('.tab-item > a');
+            const subMenuItems = document.querySelectorAll('.sub-menu li a');
+            const tabContents = document.querySelectorAll('.tab-content');
+            let selectedCount = 0;
+            const countDisplay = document.createElement('div');
+            countDisplay.id = 'selected-count';
+
+            document.body.appendChild(countDisplay);
+
+            // 存储每个一级菜单的选中计数
+            const menuCounts = {};
+
+            function updateAllMenuCounts() {
+                tabItems.forEach(item => {
+                    updateMenuCount(item);
+                });
             }
-        ];
+            function setActiveTab(target, isSubMenu = false) {
+                tabItems.forEach(item => item.classList.remove('active'));
+                subMenuItems.forEach(item => item.classList.remove('active'));
+                tabContents.forEach(content => content.classList.remove('active'));
 
-        let tocData = [
-            { title: "顶部", position: 0 },
-            { title: "中间", position: 500 }
-        ];
+                if (isSubMenu) {
+                    const parentTab = target.closest('.tab-item').querySelector('a');
+                    parentTab.classList.add('active');
+                    target.classList.add('active');
+                } else {
+                    target.classList.add('active');
+                }
 
-        function createNavigationCard(category) {
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.innerHTML = `
-                <h3>${category.title}</h3>
-                <ul class="links">
-                    ${category.links.map(link => `<li><a href="${link.url}" target="_blank">${link.name}</a></li>`).join('')}
-                </ul>
-                <button class="add-btn" onclick="openModal('${category.title}')">+</button>
+                const contentId = target.getAttribute('href').substring(1);
+                const content = document.getElementById(contentId);
+
+                if (isSubMenu) {
+                    const parentContent = target.closest('.tab-item').querySelector('a').getAttribute('href').substring(1);
+                    const parentElement = document.getElementById(parentContent);
+                    if (parentElement) {
+                        parentElement.classList.add('active');
+                        const subContents = parentElement.querySelectorAll('div[id]');
+                        subContents.forEach(subContent => {
+                            if (subContent.id === contentId) {
+                                subContent.style.display = 'block';
+                            } else {
+                                subContent.style.display = 'none';
+                            }
+                        });
+                    }
+                } else {
+                    if (content) {
+                        content.classList.add('active');
+                        const subContents = content.querySelectorAll('div[id]');
+                        subContents.forEach(subContent => {
+                            subContent.style.display = 'block';
+                        });
+                    }
+                }
+            }
+
+            function updateCount() {
+                selectedCount = document.querySelectorAll('.heart-icon[style*="color: rgb(255, 0, 0)"]').length;
+                countDisplay.textContent = `已选款: ${selectedCount} 个（点击下载报表)`;
+
+                // 更新模态框中的总计数
+                const totalProductsSpan = document.getElementById('totalProducts');
+                if (totalProductsSpan) {
+                    totalProductsSpan.textContent = selectedCount;
+                }
+            }
+
+            function updateMenuCount(menuItem) {
+                const menuId = menuItem.getAttribute('href').substring(1);
+                const count = document.querySelectorAll(`#${menuId} .heart-icon[style*="color: rgb(255, 0, 0)"]`).length;
+                menuCounts[menuId] = count;
+                const countSpan = menuItem.closest('.tab-item').querySelector('.DynamicValue');
+                if (countSpan) {
+                    countSpan.textContent = count;
+                }
+            }
+
+
+            function addHeartIcons() {
+                const productCards = document.querySelectorAll('.product-card:not(.heart-initialized)');
+                productCards.forEach((card, index) => {
+                    if (!card.querySelector('.heart-icon')) {
+                        const heart = document.createElement('div');
+                        heart.className = 'heart-icon';
+                        heart.innerHTML = heartSvg;
+
+                        const productId = card.dataset.productId;
+                        heart.dataset.productId = productId;
+
+                        heart.style.position = 'absolute';
+                        heart.style.top = '3px';
+                        heart.style.right = '3px';
+                        heart.style.cursor = 'pointer';
+                        heart.style.fontSize = '24px';
+                        heart.style.color = '#ffffff';
+                        heart.querySelector('svg').style.fill = '#ffffff';
+
+                        heart.style.zIndex = '10';
+                        card.style.position = 'relative';
+                        card.appendChild(heart);
+                        card.classList.add('heart-initialized');
+
+
+
+                        heart.addEventListener('click', function (e) {
+                            e.stopPropagation();
+                            const productId = this.dataset.productId;
+                            if (this.style.color === 'rgb(255, 0, 0)') {
+                                this.style.color = '#ffffff';
+                                this.querySelector('svg').style.fill = '#ffffff';
+                            } else {
+                                this.style.color = '#ff0000';
+                                this.querySelector('svg').style.fill = '#ff0000';
+                            }
+                            updateCount();
+                            updateAllMenuCounts(); // 更新所有菜单计数
+                        });
+                        updateAllMenuCounts(); // 在函数末尾添加这行
+
+                    }
+                });
+                updateCount();
+            }
+
+            tabItems.forEach(item => {
+                item.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    setActiveTab(this);
+                    addHeartIcons();
+                });
+            });
+
+            subMenuItems.forEach(item => {
+                item.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    setActiveTab(this, true);
+                    addHeartIcons();
+                });
+            });
+
+            // 初始化显示
+            setActiveTab(document.querySelector('.tab-item > a.active'));
+            addHeartIcons();
+            updateCount();
+            updateAllMenuCounts(); // 添加这行
+
+            // 新增的模态框相关代码
+            const modal = document.getElementById('selectedProductsModal');
+            const closeBtn = modal.querySelector('.close');
+            const selectedProductsList = document.getElementById('selectedProductsList');
+            const reportTimestamp = document.getElementById('reportTimestamp');
+            const downloadBtn = document.getElementById('downloadReport');
+
+            countDisplay.addEventListener('click', openModal);
+
+            closeBtn.addEventListener('click', closeModal);
+            window.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    closeModal();
+                }
+            });
+
+            downloadBtn.addEventListener('click', downloadReport);
+
+            function openModal() {
+                updateModalContent();
+                updateCount(); // 添加这行
+
+                modal.style.display = 'block';
+            }
+
+            function closeModal() {
+                modal.style.display = 'none';
+            }
+
+            function updateModalContent() {
+
+                selectedProductsList.innerHTML = '';
+                const now = new Date();
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                reportTimestamp.textContent = `报表生成时间：${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 ${hours}:${minutes}`;
+
+                document.querySelectorAll('.product-card').forEach(card => {
+                    const heartIcon = card.querySelector('.heart-icon');
+                    if (heartIcon && heartIcon.style.color === 'rgb(255, 0, 0)') {
+                        const modalCard = card.cloneNode(true);
+                        modalCard.classList.add('modal-product-card');
+
+                        // 移除心形图标
+                        const modalHeartIcon = modalCard.querySelector('.heart-icon');
+                        if (modalHeartIcon) {
+                            modalHeartIcon.remove();
+                        }
+
+                        // 获取产品ID
+                        const productId = heartIcon.dataset.productId;
+
+                        // 添加数量输入框
+                        const quantityInput = document.createElement('div');
+                        quantityInput.className = 'quantity-input';
+                        const storedQuantity = getProductQuantity(productId);
+                        quantityInput.innerHTML = `
+                <label for="quantity-${productId}">数量：</label>
+                <input type="number" id="quantity-${productId}" name="quantity" min="1" value="${storedQuantity}">
             `;
-            return card;
-        }
+                        modalCard.appendChild(quantityInput);
 
-        function renderNavigationGrid() {
-            const grid = document.getElementById('navigation-grid');
-            grid.innerHTML = '';
-            navigationData.forEach(category => {
-                grid.appendChild(createNavigationCard(category));
-            });
-        }
+                        // 添加数量变化监听器
+                        const input = quantityInput.querySelector('input');
+                        input.addEventListener('change', (e) => {
+                            const value = parseInt(e.target.value, 10);
+                            if (isNaN(value) || value < 1) {
+                                e.target.value = 1;
+                            }
+                            setProductQuantity(productId, e.target.value);
+                        });
 
-        function renderTableOfContents() {
-            const tocList = document.getElementById('toc-list');
-            tocList.innerHTML = '';
-            tocData.forEach(item => {
-                const li = document.createElement('li');
-                li.innerHTML = `<a href="#" onclick="scrollToPosition(${item.position})">${item.title}</a>`;
-                tocList.appendChild(li);
-            });
-        }
-
-        function scrollToPosition(position) {
-            window.scrollTo({
-                top: position,
-                behavior: 'smooth'
-            });
-        }
-
-        renderNavigationGrid();
-        renderTableOfContents();
-
-        // 模态框相关功能
-        const linkModal = document.getElementById("addLinkModal");
-        const categoryModal = document.getElementById("addCategoryModal");
-        const tocModal = document.getElementById("addTocModal");
-        const closeButtons = document.getElementsByClassName("close");
-        let currentCategory = '';
-
-        function openModal(category) {
-            linkModal.style.display = "block";
-            currentCategory = category;
-        }
-
-        function openCategoryModal() {
-            categoryModal.style.display = "block";
-        }
-
-        function openTocModal() {
-            tocModal.style.display = "block";
-        }
-
-        for (let closeButton of closeButtons) {
-            closeButton.onclick = function() {
-                linkModal.style.display = "none";
-                categoryModal.style.display = "none";
-                tocModal.style.display = "none";
+                        const removeBtn = document.createElement('span');
+                        removeBtn.className = 'remove-product';
+                        removeBtn.innerHTML = `
+<svg viewBox="0 0 24 24" width="24" height="24" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" class="remove-icon">
+  <g transform="scale(1.6) translate(-4.8, -4.8)">
+    <line x1="20" y1="4" x2="4" y2="20"></line>
+    <line x1="4" y1="4" x2="20" y2="20"></line>
+  </g>
+</svg>
+`;
+                        removeBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            removeProduct(modalCard, card);
+                        });
+                        modalCard.appendChild(removeBtn);
+                        selectedProductsList.appendChild(modalCard);
+                    }
+                });
             }
-        }
 
-        window.onclick = function(event) {
-            if (event.target == linkModal || event.target == categoryModal || event.target == tocModal) {
-                linkModal.style.display = "none";
-                categoryModal.style.display = "none";
-                tocModal.style.display = "none";
+
+            function removeProduct(modalCard, originalCard) {
+                modalCard.remove();
+                const heartIcon = originalCard.querySelector('.heart-icon');
+                if (heartIcon) {
+                    heartIcon.style.color = '#ffffff';
+                    heartIcon.querySelector('svg').style.fill = '#ffffff';
+                    updateCount();
+                    updateAllMenuCounts(); // 更新所有菜单计数
+
+                    // 清除存储的数量
+                    const productId = heartIcon.dataset.productId;
+                    localStorage.removeItem(`product_${productId}_quantity`);
+                }
             }
-        }
 
-        document.getElementById('addLinkForm').onsubmit = function(e) {
-            e.preventDefault();
-            const title = document.getElementById('linkTitle').value;
-            const url = document.getElementById('linkUrl').value;
-            addNewLink(currentCategory, title, url);
-            linkModal.style.display = "none";
-            this.reset();
-        }
 
-        document.getElementById('addCategoryForm').onsubmit = function(e) {
-            e.preventDefault();
-            const title = document.getElementById('categoryTitle').value;
-            addNewCategory(title);
-            categoryModal.style.display = "none";
-            this.reset();
-        }
 
-        document.getElementById('addTocForm').onsubmit = function(e) {
-            e.preventDefault();
-            const title = document.getElementById('tocTitle').value;
-            const position = parseInt(document.getElementById('tocPosition').value);
-            addNewTocItem(title, position);
-            tocModal.style.display = "none";
-            this.reset();
-        }
+            function downloadReport() {
+                // 暂时移除最大高度限制
+                const modalContent = modal.querySelector('.modal-content');
+                const modalProductList = modal.querySelector('.modal-product-list');
+                const originalContentStyle = modalContent.style.cssText;
+                const originalListStyle = modalProductList.style.cssText;
 
-        function addNewLink(category, title, url) {
-            const categoryIndex = navigationData.findIndex(c => c.title === category);
-            if (categoryIndex !== -1) {
-                navigationData[categoryIndex].links.push({ name: title, url: url });
-                renderNavigationGrid();
+                modalContent.style.maxHeight = 'none';
+                modalContent.style.overflow = 'visible';
+                modalProductList.style.maxHeight = 'none';
+                modalProductList.style.overflow = 'visible';
+
+                // 确保模态框可见
+                modal.style.display = 'block';
+
+                // 使用 html2canvas 捕获整个内容
+                const downloadContent = modal.querySelector('.download-content');
+
+                html2canvas(downloadContent, {
+                    useCORS: true,
+                    scale: 2,
+                    logging: true,
+                    onclone: (clonedDoc) => {
+                        const clonedContent = clonedDoc.querySelector('.modal-content');
+                        clonedContent.style.position = 'absolute';
+                        clonedContent.style.top = '0';
+                        clonedContent.style.left = '0';
+                        clonedContent.style.transform = 'none';
+                    }
+                }).then(canvas => {
+                    // 创建下载链接
+                    const link = document.createElement('a');
+                    link.download = '已选中产品报表.png';
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+
+                    // 恢复原始样式
+                    modalContent.style.cssText = originalContentStyle;
+                    modalProductList.style.cssText = originalListStyle;
+
+                    // 如果模态框之前是隐藏的，则再次隐藏
+                    if (modal.style.display === 'none') {
+                        modal.style.display = 'none';
+                    }
+                }).catch(err => {
+                    console.error("下载报表时出错:", err);
+                    // 确保即使出错也恢复原始样式
+                    modalContent.style.cssText = originalContentStyle;
+                    modalProductList.style.cssText = originalListStyle;
+                });
             }
+
+
+        });
+
+
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const menuToggle = document.getElementById('menu-toggle');
+            const menuOverlay = document.getElementById('menu-overlay');
+            const page = document.querySelector('.page');
+            const tabs = document.querySelector('.tabs');
+
+            function toggleMenu() {
+                page.classList.toggle('menu-open');
+            }
+
+            function closeMenu(e) {
+                if (page.classList.contains('menu-open')) {
+                    page.classList.remove('menu-open');
+                    // 阻止事件进一步传播
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            }
+
+            // 菜单切换按钮事件
+            menuToggle.addEventListener('click', function (e) {
+                e.stopPropagation();
+                toggleMenu();
+            });
+
+            // 菜单覆盖层事件
+            if (menuOverlay) {
+                menuOverlay.addEventListener('click', closeMenu, true);
+            }
+
+            // 为整个文档添加点击事件，使用捕获
+            document.addEventListener('click', function (e) {
+                // 检查是否是在移动设备上
+                if (window.innerWidth <= 768) {
+                    // 如果点击的不是菜单切换按钮，也不是菜单内部，就关闭菜单
+                    if (!menuToggle.contains(e.target) && !tabs.contains(e.target)) {
+                        closeMenu(e);
+                    }
+                } else {
+                    // 在非移动设备上，如果点击的不是菜单和菜单切换按钮，就关闭菜单
+                    if (!tabs.contains(e.target) && !menuToggle.contains(e.target)) {
+                        closeMenu(e);
+                    }
+                }
+            }, true); // 使用捕获
+
+            // 为所有的心形图标添加点击事件，使用捕获
+            document.querySelectorAll('.heart-icon').forEach(function (heart) {
+                heart.addEventListener('click', function (e) {
+                    if (window.innerWidth <= 768) {
+                        closeMenu(e);
+                    }
+                }, true); // 使用捕获
+            });
+        });
+
+
+        function setProductQuantity(productId, quantity) {
+            localStorage.setItem(`product_${productId}_quantity`, quantity);
         }
 
-        function addNewCategory(title) {
-            navigationData.push({ title: title, links: [] });
-            renderNavigationGrid();
+        function getProductQuantity(productId) {
+            return localStorage.getItem(`product_${productId}_quantity`) || '1';
         }
 
-        function addNewTocItem(title, position) {
-            tocData.push({ title: title, position: position });
-            renderTableOfContents();
-        }
+
+
+
     </script>
+
+
+
+
+
+
+
+
+
+
+    <script>
+        async function downloadExcel() {
+            console.log('downloadExcel function called');
+
+            // 创建一个新的工作簿
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet('选中产品');
+
+            // 添加生成时间行
+            const generateTime = new Date().toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            });
+            worksheet.addRow([`表格生成时间：${generateTime}`]);
+
+            // 合并生成时间行的单元格
+            worksheet.mergeCells('A1:C1');
+            const timeCell = worksheet.getCell('A1');
+            timeCell.font = { size: 12, bold: true };
+            timeCell.alignment = { vertical: 'middle', horizontal: 'left' };
+
+            // 设置列（现在是第二行）
+            worksheet.addRow(['产品名', '产品图片', '数量']);
+            worksheet.columns = [
+                { key: 'name', width: 30 },
+                { key: 'image', width: 30 },
+                { key: 'quantity', width: 10 }
+            ];
+
+            // 设置表头样式
+            const headerRow = worksheet.getRow(2);
+            headerRow.font = { size: 12, bold: true };
+            headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
+
+            // 获取所有选中的产品卡片
+            const cards = document.querySelectorAll('.modal-product-card');
+
+            // 遍历所有选中的产品卡片并添加到工作表
+            for (let i = 0; i < cards.length; i++) {
+                const card = cards[i];
+                const productName = card.querySelector('h3').textContent;
+                const productImageUrl = card.querySelector('img').src;
+                const quantityInput = card.querySelector('input[type="number"]');
+                const quantity = quantityInput ? quantityInput.value : '1';
+
+                // 添加行（注意：现在数据从第3行开始）
+                const row = worksheet.addRow({ name: productName, quantity: quantity });
+
+                // 下载图片
+                try {
+                    const response = await fetch(productImageUrl);
+                    const blob = await response.blob();
+                    const arrayBuffer = await blob.arrayBuffer();
+
+                    // 添加图片到工作表
+                    const imageId = workbook.addImage({
+                        buffer: arrayBuffer,
+                        extension: 'png',
+                    });
+
+                    // 将图片插入到单元格
+                    worksheet.addImage(imageId, {
+                        tl: { col: 1, row: row.number - 1 },
+                        ext: { width: 100, height: 100 }
+                    });
+
+                    // 调整行高以适应图片
+                    row.height = 75;
+                } catch (error) {
+                    console.error('Error adding image:', error);
+                    worksheet.getCell(`B${row.number}`).value = '图片加载失败';
+                }
+            }
+
+            // 生成Excel文件
+            try {
+                const buffer = await workbook.xlsx.writeBuffer();
+                const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                saveAs(blob, '已选中产品报表.xlsx');
+            } catch (error) {
+                console.error('Error generating Excel file:', error);
+                alert('生成Excel文件时出错，请稍后再试。');
+            }
+        }
+
+        // 为Excel下载按钮添加事件监听器
+        document.getElementById('downloadExcel').addEventListener('click', downloadExcel);
+
+
+    </script>
+
+
+
+
+
+
+
+
+
+    <SCript>
+        // 加载指示器管理
+        const loadingManager = {
+            show: function (message) {
+                document.getElementById('loadingIndicator').style.display = 'block';
+                document.getElementById('loadingMessage').textContent = message || '正在处理，请稍候...';
+            },
+            hide: function () {
+                document.getElementById('loadingIndicator').style.display = 'none';
+            },
+            showError: function (message) {
+                document.getElementById('loadingMessage').textContent = message || '处理时出错，请重试。';
+                setTimeout(() => {
+                    this.hide();
+                }, 3000);
+            }
+        };
+
+        // 包装下载函数的辅助函数
+        function wrapDownloadFunction(originalFunction, loadingMessage, errorMessage) {
+            return async function () {
+                loadingManager.show(loadingMessage);
+                try {
+                    await originalFunction();
+                    loadingManager.hide();
+                } catch (error) {
+                    console.error('Error in download function:', error);
+                    loadingManager.showError(errorMessage);
+                }
+            };
+        }
+
+        // 包装现有的下载函数
+        const downloadExcelWrapped = wrapDownloadFunction(
+            downloadExcel,
+            '正在生成Excel文件，请稍候...',
+            '生成Excel文件时出错，请重试。'
+        );
+
+        const downloadPNGWrapped = wrapDownloadFunction(
+            downloadPNG,
+            '正在生成PNG图片，请稍候...',
+            '生成PNG图片时出错，请重试。'
+        );
+
+        // 替换原有的事件监听器
+        document.getElementById('downloadExcel').removeEventListener('click', downloadExcel);
+        document.getElementById('downloadExcel').addEventListener('click', downloadExcelWrapped);
+
+        // 假设您有一个用于下载PNG的按钮，ID为'downloadPNG'
+        document.getElementById('downloadPNG').removeEventListener('click', downloadPNG);
+        document.getElementById('downloadPNG').addEventListener('click', downloadPNGWrapped);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    </SCript>
+
 </body>
+
 </html>
